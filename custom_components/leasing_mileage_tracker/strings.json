@@ -1,0 +1,119 @@
+{
+  "title": "Leasing Mileage Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Leasing Mileage Tracker",
+        "description": "Track leased vehicle mileage against contract limits.",
+        "data": {
+          "name": "Name",
+          "source_entity_id": "Odometer sensor",
+          "contract_start_date": "Contract start date",
+          "contract_end_date": "Contract end date",
+          "contract_total_km": "Contract total distance (km)",
+          "pickup_odometer_km": "Pickup odometer (km)",
+          "overage_rate_sek_per_mil": "Overage rate (SEK per mil)",
+          "underage_refund_rate_sek_per_mil": "Underage refund rate (SEK per mil)",
+          "underage_refund_max_mil": "Underage refund cap (mil)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Leasing Mileage Tracker",
+        "data": {
+          "name": "Name",
+          "contract_total_km": "Contract total distance (km)",
+          "overage_rate_sek_per_mil": "Overage rate (SEK per mil)",
+          "underage_refund_rate_sek_per_mil": "Underage refund rate (SEK per mil)",
+          "underage_refund_max_mil": "Underage refund cap (mil)",
+          "actual_end_date": "Actual end date (optional)"
+        }
+      }
+    },
+    "error": {
+      "source_unavailable": "The selected sensor is unavailable",
+      "invalid_numeric_state": "The selected sensor state is not numeric",
+      "invalid_state_class": "The selected sensor must use state_class total or total_increasing",
+      "invalid_unit": "The selected sensor must use km, mi, or m",
+      "invalid_dates": "Contract end date must be on or after start date",
+      "invalid_actual_end": "Actual end date must be within contract period"
+    },
+    "abort": {
+      "already_configured": "This odometer sensor is already configured",
+      "entry_not_found": "The config entry could not be found"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Leasing Mileage Tracker options",
+        "data": {
+          "name": "Name",
+          "contract_total_km": "Contract total distance (km)",
+          "overage_rate_sek_per_mil": "Overage rate (SEK per mil)",
+          "underage_refund_rate_sek_per_mil": "Underage refund rate (SEK per mil)",
+          "underage_refund_max_mil": "Underage refund cap (mil)",
+          "actual_end_date": "Actual end date (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_actual_end": "Actual end date must be within contract period"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "balance_km": {
+        "name": "Balance (km)"
+      },
+      "balance_mil": {
+        "name": "Balance (mil)"
+      },
+      "allowed_km_today": {
+        "name": "Allowed distance today (km)"
+      },
+      "used_km": {
+        "name": "Used distance (km)"
+      },
+      "remaining_km_to_contract_end": {
+        "name": "Remaining to contract end (km)"
+      },
+      "daily_quota_km": {
+        "name": "Daily quota (km/day)"
+      },
+      "weekly_quota_km": {
+        "name": "Weekly quota (km/week)"
+      },
+      "monthly_quota_km": {
+        "name": "Monthly quota (km/month)"
+      },
+      "current_overage_cost_sek": {
+        "name": "Current overage cost"
+      },
+      "projected_overage_cost_sek": {
+        "name": "Projected overage cost"
+      },
+      "avoided_overage_value_sek": {
+        "name": "Underage refund value"
+      }
+    },
+    "binary_sensor": {
+      "over_quota_now": {
+        "name": "Over quota now"
+      },
+      "projected_over_quota_end": {
+        "name": "Projected over quota at end"
+      },
+      "source_stale": {
+        "name": "Source stale"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_entry_id": {
+      "message": "Invalid entry ID: {entry_id}"
+    },
+    "entry_not_loaded": {
+      "message": "The integration entry is not currently loaded"
+    }
+  }
+}

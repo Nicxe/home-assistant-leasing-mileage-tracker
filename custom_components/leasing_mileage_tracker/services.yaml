@@ -1,0 +1,30 @@
+rebaseline:
+  name: Rebaseline odometer
+  description: Set a new odometer baseline from now forward and store an audit note.
+  fields:
+    entry_id:
+      name: Config entry ID
+      description: The config entry ID for the target vehicle.
+      required: true
+      example: "01ABCDEFGHIJKL"
+      selector:
+        text:
+    new_odometer_km:
+      name: New odometer (km)
+      description: The corrected odometer value in kilometers.
+      required: true
+      example: 52340
+      selector:
+        number:
+          min: 0
+          max: 10000000
+          step: 0.1
+          mode: box
+          unit_of_measurement: km
+    note:
+      name: Note
+      description: Optional note stored in adjustment history.
+      required: false
+      example: "Adjusted after dealership correction"
+      selector:
+        text:

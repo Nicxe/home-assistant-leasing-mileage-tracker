@@ -1,0 +1,29 @@
+name: Validate
+
+on:
+  push:
+    branches: [dev, beta, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: hassfest
+        uses: home-assistant/actions/hassfest@master
+
+      # HACS validation disabled until brand logo is submitted
+      # - name: HACS validation
+      #   uses: hacs/action@main
+      #   with:
+      #     category: integration

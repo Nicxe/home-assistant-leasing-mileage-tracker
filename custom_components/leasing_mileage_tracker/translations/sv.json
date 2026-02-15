@@ -1,0 +1,119 @@
+{
+    "title": "Leasing K\u00f6rstr\u00e4cka",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Konfigurera Leasing K\u00f6rstr\u00e4cka",
+                "description": "F\u00f6lj bilens k\u00f6rstr\u00e4cka mot leasingavtalets villkor.",
+                "data": {
+                    "name": "Namn",
+                    "source_entity_id": "M\u00e4tarsensor",
+                    "contract_start_date": "Avtalets startdatum",
+                    "contract_end_date": "Avtalets slutdatum",
+                    "contract_total_km": "Total avtalad k\u00f6rstr\u00e4cka (km)",
+                    "pickup_odometer_km": "M\u00e4tarst\u00e4llning vid h\u00e4mtning (km)",
+                    "overage_rate_sek_per_mil": "\u00d6vermilspris (SEK per mil)",
+                    "underage_refund_rate_sek_per_mil": "Undermilsers\u00e4ttning (SEK per mil)",
+                    "underage_refund_max_mil": "Tak f\u00f6r undermilsers\u00e4ttning (mil)"
+                }
+            },
+            "reconfigure": {
+                "title": "Omkonfigurera Leasing K\u00f6rstr\u00e4cka",
+                "data": {
+                    "name": "Namn",
+                    "contract_total_km": "Total avtalad k\u00f6rstr\u00e4cka (km)",
+                    "overage_rate_sek_per_mil": "\u00d6vermilspris (SEK per mil)",
+                    "underage_refund_rate_sek_per_mil": "Undermilsers\u00e4ttning (SEK per mil)",
+                    "underage_refund_max_mil": "Tak f\u00f6r undermilsers\u00e4ttning (mil)",
+                    "actual_end_date": "Faktiskt slutdatum (valfritt)"
+                }
+            }
+        },
+        "error": {
+            "source_unavailable": "Vald sensor \u00e4r inte tillg\u00e4nglig",
+            "invalid_numeric_state": "Vald sensor har inte ett numeriskt v\u00e4rde",
+            "invalid_state_class": "Vald sensor m\u00e5ste ha state_class total eller total_increasing",
+            "invalid_unit": "Vald sensor m\u00e5ste anv\u00e4nda km, mi eller m",
+            "invalid_dates": "Slutdatum m\u00e5ste vara samma dag eller efter startdatum",
+            "invalid_actual_end": "Faktiskt slutdatum m\u00e5ste ligga inom avtalsperioden"
+        },
+        "abort": {
+            "already_configured": "Den h\u00e4r m\u00e4tarsensorn \u00e4r redan konfigurerad",
+            "entry_not_found": "Konfigurationsposten kunde inte hittas"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Alternativ f\u00f6r Leasing K\u00f6rstr\u00e4cka",
+                "data": {
+                    "name": "Namn",
+                    "contract_total_km": "Total avtalad k\u00f6rstr\u00e4cka (km)",
+                    "overage_rate_sek_per_mil": "\u00d6vermilspris (SEK per mil)",
+                    "underage_refund_rate_sek_per_mil": "Undermilsers\u00e4ttning (SEK per mil)",
+                    "underage_refund_max_mil": "Tak f\u00f6r undermilsers\u00e4ttning (mil)",
+                    "actual_end_date": "Faktiskt slutdatum (valfritt)"
+                }
+            }
+        },
+        "error": {
+            "invalid_actual_end": "Faktiskt slutdatum m\u00e5ste ligga inom avtalsperioden"
+        }
+    },
+    "entity": {
+        "sensor": {
+            "balance_km": {
+                "name": "Saldo (km)"
+            },
+            "balance_mil": {
+                "name": "Saldo (mil)"
+            },
+            "allowed_km_today": {
+                "name": "Till\u00e5ten k\u00f6rstr\u00e4cka idag (km)"
+            },
+            "used_km": {
+                "name": "K\u00f6rd str\u00e4cka (km)"
+            },
+            "remaining_km_to_contract_end": {
+                "name": "Kvar till avtalsslut (km)"
+            },
+            "daily_quota_km": {
+                "name": "Daglig kvot (km/dag)"
+            },
+            "weekly_quota_km": {
+                "name": "Veckokvot (km/vecka)"
+            },
+            "monthly_quota_km": {
+                "name": "M\u00e5nadskvot (km/m\u00e5nad)"
+            },
+            "current_overage_cost_sek": {
+                "name": "Aktuell \u00f6vermils-kostnad"
+            },
+            "projected_overage_cost_sek": {
+                "name": "Prognostiserad \u00f6vermils-kostnad"
+            },
+            "avoided_overage_value_sek": {
+                "name": "Undermilsers\u00e4ttning"
+            }
+        },
+        "binary_sensor": {
+            "over_quota_now": {
+                "name": "\u00d6ver kvot nu"
+            },
+            "projected_over_quota_end": {
+                "name": "Prognos \u00f6ver kvot vid slut"
+            },
+            "source_stale": {
+                "name": "Datak\u00e4lla inaktiv"
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_entry_id": {
+            "message": "Ogiltigt entry ID: {entry_id}"
+        },
+        "entry_not_loaded": {
+            "message": "Integrationen \u00e4r inte laddad just nu"
+        }
+    }
+}

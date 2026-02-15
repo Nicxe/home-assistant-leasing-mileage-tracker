@@ -1,0 +1,10 @@
+{
+  "domain": "leasing_mileage_tracker",
+  "name": "Leasing Mileage Tracker",
+  "codeowners": ["@Nicxe"],
+  "config_flow": true,
+  "documentation": "https://github.com/Nicxe/home-assistant-leasing-mileage-tracker",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/Nicxe/home-assistant-leasing-mileage-tracker/issues",
+  "version": "0.0.0"
+}

@@ -1,0 +1,8 @@
+name: Question
+description: Ask a question about Leasing Mileage Tracker
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please use GitHub Discussions or Issues for questions about Leasing Mileage Tracker.
