@@ -47,10 +47,14 @@ def mock_config_entry(default_entry_data: dict) -> MockConfigEntry:
 @pytest.fixture
 def set_odometer_state(hass):
     def _set(
-        value: float, unit: str = "km", state_class: str = "total_increasing"
+        value: float,
+        unit: str = "km",
+        state_class: str = "total_increasing",
+        *,
+        entity_id: str = "sensor.test_odometer",
     ) -> None:
         hass.states.async_set(
-            "sensor.test_odometer",
+            entity_id,
             str(value),
             {
                 "unit_of_measurement": unit,

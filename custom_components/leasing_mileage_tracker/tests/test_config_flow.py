@@ -102,6 +102,7 @@ async def test_options_flow_saves_values(
         result["flow_id"],
         {
             "name": "Updated car",
+            CONF_SOURCE_ENTITY_ID: "sensor.test_odometer",
             CONF_CONTRACT_TOTAL_KM: 50000,
             CONF_OVERAGE_RATE_SEK_PER_MIL: 12,
             CONF_UNDERAGE_REFUND_RATE_SEK_PER_MIL: 4.4,
@@ -110,7 +111,100 @@ async def test_options_flow_saves_values(
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_SOURCE_ENTITY_ID] == "sensor.test_odometer"
     assert mock_config_entry.options[CONF_CONTRACT_TOTAL_KM] == 50000
     assert mock_config_entry.options[CONF_OVERAGE_RATE_SEK_PER_MIL] == 12
     assert mock_config_entry.options[CONF_UNDERAGE_REFUND_RATE_SEK_PER_MIL] == 4.4
     assert mock_config_entry.options[CONF_UNDERAGE_REFUND_MAX_MIL] == 600
+
+
+async def test_options_flow_changes_source_entity(
+    hass, mock_config_entry, set_odometer_state
+) -> None:
+    set_odometer_state(10000)
+    set_odometer_state(10001, entity_id="sensor.replacement_odometer")
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "name": "Updated car",
+            CONF_SOURCE_ENTITY_ID: "sensor.replacement_odometer",
+            CONF_CONTRACT_TOTAL_KM: 45000,
+            CONF_OVERAGE_RATE_SEK_PER_MIL: 11,
+            CONF_UNDERAGE_REFUND_RATE_SEK_PER_MIL: 5.5,
+            CONF_UNDERAGE_REFUND_MAX_MIL: 500,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert (
+        mock_config_entry.options[CONF_SOURCE_ENTITY_ID]
+        == "sensor.replacement_odometer"
+    )
+
+
+async def test_options_flow_rejects_invalid_source_entity(
+    hass, mock_config_entry, set_odometer_state
+) -> None:
+    set_odometer_state(10000)
+    set_odometer_state(
+        10001,
+        unit="kWh",
+        entity_id="sensor.invalid_odometer",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "name": "Updated car",
+            CONF_SOURCE_ENTITY_ID: "sensor.invalid_odometer",
+            CONF_CONTRACT_TOTAL_KM: 45000,
+            CONF_OVERAGE_RATE_SEK_PER_MIL: 11,
+            CONF_UNDERAGE_REFUND_RATE_SEK_PER_MIL: 5.5,
+            CONF_UNDERAGE_REFUND_MAX_MIL: 500,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_unit"
+    assert CONF_SOURCE_ENTITY_ID not in mock_config_entry.options
+
+
+async def test_reconfigure_flow_changes_source_entity(
+    hass, mock_config_entry, set_odometer_state
+) -> None:
+    set_odometer_state(10000)
+    set_odometer_state(10001, entity_id="sensor.replacement_odometer")
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "name": "Updated car",
+            CONF_SOURCE_ENTITY_ID: "sensor.replacement_odometer",
+            CONF_CONTRACT_TOTAL_KM: 45000,
+            CONF_OVERAGE_RATE_SEK_PER_MIL: 11,
+            CONF_UNDERAGE_REFUND_RATE_SEK_PER_MIL: 5.5,
+            CONF_UNDERAGE_REFUND_MAX_MIL: 500,
+        },
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigured"
+    assert (
+        mock_config_entry.options[CONF_SOURCE_ENTITY_ID]
+        == "sensor.replacement_odometer"
+    )

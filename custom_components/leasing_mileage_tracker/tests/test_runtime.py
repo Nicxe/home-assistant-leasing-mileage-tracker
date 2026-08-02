@@ -15,6 +15,7 @@ from custom_components.leasing_mileage_tracker.const import (
     ATTR_NEW_ODOMETER_KM,
     ATTR_NOTE,
     CONF_CONTRACT_TOTAL_KM,
+    CONF_SOURCE_ENTITY_ID,
     DOMAIN,
     EVENT_OVER_QUOTA_ENTERED,
     SERVICE_REBASELINE,
@@ -105,6 +106,26 @@ async def test_source_stale_binary_sensor_turns_on(
     coordinator = mock_config_entry.runtime_data.coordinator
     coordinator._last_source_update = dt_util.utcnow() - timedelta(hours=49)
     assert coordinator._is_source_stale(dt_util.utcnow()) is True
+
+
+async def test_coordinator_uses_source_entity_from_options(
+    hass,
+    mock_config_entry,
+    set_odometer_state,
+) -> None:
+    set_odometer_state(12000, entity_id="sensor.replacement_odometer")
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=dict(mock_config_entry.data),
+        options={CONF_SOURCE_ENTITY_ID: "sensor.replacement_odometer"},
+    )
+
+    await _setup_entry(hass, mock_config_entry, set_odometer_state)
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    assert coordinator.source_entity_id == "sensor.replacement_odometer"
+    assert coordinator.data is not None
+    assert coordinator.data.odometer_km == 12000
 
 
 async def test_underage_refund_is_capped_to_max_mil(

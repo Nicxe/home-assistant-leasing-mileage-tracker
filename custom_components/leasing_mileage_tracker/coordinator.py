@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
 from dataclasses import asdict
+from datetime import date, datetime
 import logging
 from typing import Any
 
@@ -23,8 +23,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     ATTR_ALLOWED_KM,
@@ -66,8 +65,8 @@ from .const import (
     EVENT_SOURCE_STALE,
     MAX_HISTORY_POINTS,
     METER_IN_KM,
-    MILE_IN_KM,
     MIL_IN_KM,
+    MILE_IN_KM,
     SOURCE_STALE_THRESHOLD,
     STALE_CHECK_INTERVAL,
     STORAGE_KEY_PREFIX,
@@ -128,7 +127,12 @@ class LeasingMileageCoordinator(DataUpdateCoordinator[ComputedLeaseState]):
 
     @property
     def source_entity_id(self) -> str:
-        return str(self.entry.data[CONF_SOURCE_ENTITY_ID])
+        return str(
+            self.entry.options.get(
+                CONF_SOURCE_ENTITY_ID,
+                self.entry.data[CONF_SOURCE_ENTITY_ID],
+            )
+        )
 
     @property
     def contract_start_date(self) -> date:

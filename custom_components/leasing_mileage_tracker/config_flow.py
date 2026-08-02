@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, OptionsFlowWithConfigEntry
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import selector
 from homeassistant.util import dt as dt_util
 import voluptuous as vol
@@ -58,6 +58,44 @@ def _normalize_unit(value: Any) -> str | None:
     return value.strip().lower()
 
 
+def _source_entity_error(
+    hass: HomeAssistant,
+    source_entity_id: str,
+) -> str | None:
+    """Return a config flow error for an invalid odometer entity."""
+    source_state = hass.states.get(source_entity_id)
+    if source_state is None:
+        return "source_unavailable"
+
+    try:
+        float(source_state.state)
+    except (TypeError, ValueError):
+        return "invalid_numeric_state"
+
+    if source_state.attributes.get(_STATE_CLASS_ATTR) not in _ALLOWED_STATE_CLASSES:
+        return "invalid_state_class"
+
+    normalized_unit = _normalize_unit(
+        source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    )
+    if normalized_unit not in _ALLOWED_DISTANCE_UNITS:
+        return "invalid_unit"
+
+    return None
+
+
+def _source_entity_selector():
+    """Return the selector used for odometer entities."""
+    return selector(
+        {
+            "entity": {
+                "multiple": False,
+                "filter": {"domain": ["sensor"]},
+            }
+        }
+    )
+
+
 class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for Leasing Mileage Tracker."""
 
@@ -71,24 +109,8 @@ class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             source_entity_id = str(user_input[CONF_SOURCE_ENTITY_ID])
-            source_state = self.hass.states.get(source_entity_id)
-            if source_state is None:
-                errors["base"] = "source_unavailable"
-            else:
-                try:
-                    float(source_state.state)
-                except (TypeError, ValueError):
-                    errors["base"] = "invalid_numeric_state"
-
-                state_class = source_state.attributes.get(_STATE_CLASS_ATTR)
-                if state_class not in _ALLOWED_STATE_CLASSES:
-                    errors["base"] = "invalid_state_class"
-
-                normalized_unit = _normalize_unit(
-                    source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                )
-                if normalized_unit not in _ALLOWED_DISTANCE_UNITS:
-                    errors["base"] = "invalid_unit"
+            if source_error := _source_entity_error(self.hass, source_entity_id):
+                errors["base"] = source_error
 
             start_date = _parse_date_value(user_input.get(CONF_CONTRACT_START_DATE))
             end_date = _parse_date_value(user_input.get(CONF_CONTRACT_END_DATE))
@@ -123,14 +145,7 @@ class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Optional("name", default=DEFAULT_NAME): str,
-                    vol.Required(CONF_SOURCE_ENTITY_ID): selector(
-                        {
-                            "entity": {
-                                "multiple": False,
-                                "filter": {"domain": ["sensor"]},
-                            }
-                        }
-                    ),
+                    vol.Required(CONF_SOURCE_ENTITY_ID): _source_entity_selector(),
                     vol.Required(CONF_CONTRACT_START_DATE): selector({"date": {}}),
                     vol.Required(CONF_CONTRACT_END_DATE): selector({"date": {}}),
                     vol.Required(CONF_CONTRACT_TOTAL_KM, default=45000): selector(
@@ -210,6 +225,12 @@ class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         default_name = str(entry.data.get("name", DEFAULT_NAME))
+        default_source_entity_id = str(
+            entry.options.get(
+                CONF_SOURCE_ENTITY_ID,
+                entry.data[CONF_SOURCE_ENTITY_ID],
+            )
+        )
         default_total = float(
             entry.options.get(
                 CONF_CONTRACT_TOTAL_KM, entry.data[CONF_CONTRACT_TOTAL_KM]
@@ -242,6 +263,10 @@ class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         default_actual_end = entry.options.get(CONF_ACTUAL_END_DATE)
 
         if user_input is not None:
+            source_entity_id = str(user_input[CONF_SOURCE_ENTITY_ID])
+            if source_error := _source_entity_error(self.hass, source_entity_id):
+                errors["base"] = source_error
+
             actual_end_raw = user_input.get(CONF_ACTUAL_END_DATE)
             actual_end = _parse_date_value(actual_end_raw) if actual_end_raw else None
 
@@ -260,6 +285,7 @@ class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 new_data["name"] = str(user_input.get("name", default_name))
 
                 new_options = dict(entry.options)
+                new_options[CONF_SOURCE_ENTITY_ID] = source_entity_id
                 new_options[CONF_CONTRACT_TOTAL_KM] = float(
                     user_input[CONF_CONTRACT_TOTAL_KM]
                 )
@@ -287,6 +313,10 @@ class LeasingMileageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema_data: dict[Any, Any] = {
             vol.Optional("name", default=default_name): str,
+            vol.Required(
+                CONF_SOURCE_ENTITY_ID,
+                default=default_source_entity_id,
+            ): _source_entity_selector(),
             vol.Required(CONF_CONTRACT_TOTAL_KM, default=default_total): selector(
                 {
                     "number": {
@@ -374,6 +404,12 @@ class LeasingMileageOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 self.config_entry.data.get("name", DEFAULT_NAME),
             )
         )
+        default_source_entity_id = str(
+            self.config_entry.options.get(
+                CONF_SOURCE_ENTITY_ID,
+                self.config_entry.data[CONF_SOURCE_ENTITY_ID],
+            )
+        )
         default_total = float(
             self.config_entry.options.get(
                 CONF_CONTRACT_TOTAL_KM,
@@ -407,6 +443,10 @@ class LeasingMileageOptionsFlowHandler(OptionsFlowWithConfigEntry):
         default_actual_end = self.config_entry.options.get(CONF_ACTUAL_END_DATE)
 
         if user_input is not None:
+            source_entity_id = str(user_input[CONF_SOURCE_ENTITY_ID])
+            if source_error := _source_entity_error(self.hass, source_entity_id):
+                errors["base"] = source_error
+
             actual_end_raw = user_input.get(CONF_ACTUAL_END_DATE)
             actual_end = _parse_date_value(actual_end_raw) if actual_end_raw else None
 
@@ -425,6 +465,7 @@ class LeasingMileageOptionsFlowHandler(OptionsFlowWithConfigEntry):
             if not errors:
                 options: dict[str, Any] = {
                     "name": str(user_input.get("name", default_name)),
+                    CONF_SOURCE_ENTITY_ID: source_entity_id,
                     CONF_CONTRACT_TOTAL_KM: float(user_input[CONF_CONTRACT_TOTAL_KM]),
                     CONF_OVERAGE_RATE_SEK_PER_MIL: float(
                         user_input[CONF_OVERAGE_RATE_SEK_PER_MIL]
@@ -442,6 +483,10 @@ class LeasingMileageOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         schema_data: dict[Any, Any] = {
             vol.Optional("name", default=default_name): str,
+            vol.Required(
+                CONF_SOURCE_ENTITY_ID,
+                default=default_source_entity_id,
+            ): _source_entity_selector(),
             vol.Required(CONF_CONTRACT_TOTAL_KM, default=default_total): selector(
                 {
                     "number": {
