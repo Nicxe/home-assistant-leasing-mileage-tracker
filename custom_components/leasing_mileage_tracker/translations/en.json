@@ -71,6 +71,12 @@
             "balance_km": {
                 "name": "Balance (km)"
             },
+            "contract_start_date": {
+                "name": "Contract start date"
+            },
+            "contract_end_date": {
+                "name": "Contract end date"
+            },
             "balance_mil": {
                 "name": "Balance (mil)"
             },

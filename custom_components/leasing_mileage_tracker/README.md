@@ -46,6 +46,8 @@ new sensor is used after the integration reloads.
 
 ### Sensors
 
+- `contract_start_date`: Configured contract start date
+- `contract_end_date`: Configured contract end date
 - `balance_km`: Current balance in km against contract pace. Positive means over quota
 - `balance_mil`: Same balance as above, converted to mil
 - `allowed_km_today`: Cumulative km you are allowed to have driven up to today

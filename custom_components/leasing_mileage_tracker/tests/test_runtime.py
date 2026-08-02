@@ -41,8 +41,40 @@ async def test_setup_creates_expected_entities(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # 11 sensors + 3 binary sensors
-    assert len(entries) == 14
+    # 13 sensors + 3 binary sensors
+    assert len(entries) == 16
+
+
+async def test_contract_date_sensors_use_configured_dates(
+    hass,
+    mock_config_entry,
+    set_odometer_state,
+) -> None:
+    await _setup_entry(hass, mock_config_entry, set_odometer_state)
+
+    entity_registry = er.async_get(hass)
+    start_entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_contract_start_date",
+    )
+    end_entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_contract_end_date",
+    )
+
+    assert start_entity_id is not None
+    assert end_entity_id is not None
+
+    start_state = hass.states.get(start_entity_id)
+    end_state = hass.states.get(end_entity_id)
+    assert start_state is not None
+    assert end_state is not None
+    assert start_state.state == "2026-01-01"
+    assert end_state.state == "2028-12-31"
+    assert start_state.attributes["device_class"] == "date"
+    assert end_state.attributes["device_class"] == "date"
 
 
 async def test_over_quota_event_emitted_on_transition(

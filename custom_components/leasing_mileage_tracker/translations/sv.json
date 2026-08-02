@@ -71,6 +71,12 @@
             "balance_km": {
                 "name": "Saldo (km)"
             },
+            "contract_start_date": {
+                "name": "Avtalets startdatum"
+            },
+            "contract_end_date": {
+                "name": "Avtalets slutdatum"
+            },
             "balance_mil": {
                 "name": "Saldo (mil)"
             },

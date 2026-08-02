@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
+from datetime import date
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,6 +27,13 @@ class LeasingMileageSensorDescription(SensorEntityDescription):
     """Leasing mileage sensor description."""
 
     value_fn: Callable[[ComputedLeaseState], float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class LeasingMileageDateSensorDescription(SensorEntityDescription):
+    """Leasing contract date sensor description."""
+
+    value_fn: Callable[[LeasingMileageCoordinator], date]
 
 
 SENSOR_DESCRIPTIONS: tuple[LeasingMileageSensorDescription, ...] = (
@@ -119,6 +127,21 @@ SENSOR_DESCRIPTIONS: tuple[LeasingMileageSensorDescription, ...] = (
     ),
 )
 
+DATE_SENSOR_DESCRIPTIONS: tuple[LeasingMileageDateSensorDescription, ...] = (
+    LeasingMileageDateSensorDescription(
+        key="contract_start_date",
+        translation_key="contract_start_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda coordinator: coordinator.contract_start_date,
+    ),
+    LeasingMileageDateSensorDescription(
+        key="contract_end_date",
+        translation_key="contract_end_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda coordinator: coordinator.contract_end_date,
+    ),
+)
+
 
 async def async_setup_entry(
     hass,
@@ -131,6 +154,10 @@ async def async_setup_entry(
         [
             LeasingMileageSensor(entry, coordinator, description)
             for description in SENSOR_DESCRIPTIONS
+        ]
+        + [
+            LeasingMileageDateSensor(entry, coordinator, description)
+            for description in DATE_SENSOR_DESCRIPTIONS
         ]
     )
 
@@ -235,3 +262,38 @@ class LeasingMileageSensor(
                 self.entity_id,
             )
         await super().async_will_remove_from_hass()
+
+
+class LeasingMileageDateSensor(
+    CoordinatorEntity[LeasingMileageCoordinator],
+    SensorEntity,
+):
+    """Sensor exposing a configured contract date."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        entry: LeasingMileageConfigEntry,
+        coordinator: LeasingMileageCoordinator,
+        description: LeasingMileageDateSensorDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._entry = entry
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_translation_key = description.translation_key
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return shared device for all entities in one entry."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._entry.entry_id)},
+            name=self.coordinator.config_name,
+        )
+
+    @property
+    def native_value(self) -> date:
+        """Return the configured contract date."""
+        return self.entity_description.value_fn(self.coordinator)
